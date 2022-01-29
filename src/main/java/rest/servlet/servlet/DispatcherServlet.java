@@ -1,5 +1,7 @@
 package rest.servlet.servlet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,84 +14,120 @@ import rest.servlet.type.MappingMethod;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @WebServlet("/")
 public class DispatcherServlet extends HttpServlet {
-    private static final NotFoundController DEFAULT_CONTROLLER = new NotFoundController();
-    private static final Map<String, Object> CONTROLLER_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, MappingMethod> CONTROLLER_MAP = new ConcurrentHashMap<>();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
-    public void init() throws ServletException {
+    public void init(ServletConfig servletConfig) throws ServletException {
+        super.init(servletConfig);
+
         List<Class<?>> scan = ClassScanner.scan();
 
         if (scan.isEmpty()) {
-            throw new RuntimeException("0 classes was found");
+            throw new RuntimeException("0 classes was found during DispatcherServlet initialization");
         }
 
         scan.stream()
                 .filter(clazz -> clazz.isAnnotationPresent(Controller.class))
-                .forEach(clazz -> {
+                .map(clazz -> {
+                    List<MappingMethod> mappingMethods = new ArrayList<>();
+
                     try {
-                        CONTROLLER_MAP.putIfAbsent(clazz.getAnnotation(Controller.class).value(), clazz.newInstance());
+                        for (Method method : clazz.getDeclaredMethods()) {
+                            if (method.isAnnotationPresent(Mapping.class)) {
+                                String controllerMapping = clazz.getAnnotation(Controller.class).value();
+                                String methodMapping = method.getAnnotation(Mapping.class).value();
+
+                                if (controllerMapping.isEmpty() || !controllerMapping.startsWith("/")) {
+                                    controllerMapping = "/" + controllerMapping;
+                                }
+
+                                if (methodMapping.isEmpty() || !methodMapping.startsWith("/")) {
+                                    methodMapping = "/" + methodMapping;
+                                }
+
+                                mappingMethods.add(
+                                        MappingMethod.builder()
+                                                .targetObject(clazz.newInstance())
+                                                .targetMethod(method)
+                                                .url(controllerMapping.equals("/") ? "" + methodMapping : controllerMapping + methodMapping)
+                                                .httpMethod(method.getAnnotation(Mapping.class).method())
+                                                .build()
+                                );
+                            }
+                        }
                     } catch (InstantiationException | IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
-                });
 
-        super.init();
+                    return mappingMethods;
+                })
+                .flatMap(Collection::stream)
+                .peek(mappingMethod -> {
+                    Parameter[] methodParameters = mappingMethod.getTargetMethod().getParameters();
+                    Object[] parameters = new Object[methodParameters.length];
+
+                    for (int a = 0; a < parameters.length; a++) {
+                        if (methodParameters[a].getType().equals(ServletConfig.class)) {
+                            parameters[a] = servletConfig;
+                        }
+                    }
+
+                    mappingMethod.setParameters(parameters);
+                })
+                .forEach(mappingMethod -> CONTROLLER_MAP.putIfAbsent(mappingMethod.getUrl(), mappingMethod));
     }
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Object o = CONTROLLER_MAP.get(request.getRequestURI());
+        MappingMethod mappingMethod = CONTROLLER_MAP.get(request.getRequestURI());
 
-        if (o == null) {
-            DEFAULT_CONTROLLER.handle(request, response);
+        if (mappingMethod == null) {
+            response.getWriter().write(String.format("endpoint '%s' not found", request.getRequestURI()));
+        } else if (!mappingMethod.getHttpMethod().name().equals(request.getMethod())) {
+            response.getWriter().write(String.format("method '%s' not allowed on this endpoint", request.getMethod()));
         } else {
-            Arrays.stream(o.getClass().getDeclaredMethods())
-                    .filter(method -> method.isAnnotationPresent(Mapping.class))
-                    .map(method -> {
-                        Parameter[] methodParameters = method.getParameters();
-                        Object[] parameters = new Object[methodParameters.length];
+            try {
+                Object result = mappingMethod.getTargetMethod().invoke(
+                        mappingMethod.getTargetObject(),
+                        parseMethodArguments(mappingMethod, request, response)
+                );
 
-                        for (int a = 0; a < parameters.length; a++) {
-                            if (methodParameters[a].getType().equals(HttpServletRequest.class)) {
-                                parameters[a] = request;
-                            } else if (methodParameters[a].getType().equals(HttpServletResponse.class)) {
-                                parameters[a] = response;
-                            }
-                        }
-
-                        return MappingMethod.builder()
-                                .method(method)
-                                .url(method.getAnnotation(Mapping.class).value())
-                                .httpMethod(method.getAnnotation(Mapping.class).method())
-                                .parameters(parameters)
-                                .build();
-                    })
-                    .filter(mappingMethod -> mappingMethod.getHttpMethod().name().equals(request.getMethod()) && request.getRequestURI().endsWith(mappingMethod.getUrl()))
-                    .forEach(mappingMethod -> {
-                        try {
-                            Object result = mappingMethod.getMethod().invoke(o, mappingMethod.getParameters());
-
-                            if (result.getClass().equals(String.class)) {
-                                response.getWriter().write((String) result);
-                            }
-                        } catch (IllegalAccessException | InvocationTargetException | IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
+                if (result.getClass().equals(String.class)) {
+                    response.setContentType("text/plain");
+                    response.getWriter().write((String) result);
+                } else if (!result.getClass().equals(Void.class)) {
+                    response.setContentType("application/json");
+                    response.getWriter().write(OBJECT_MAPPER.writeValueAsString(result));
+                }
+            } catch (IllegalAccessException | InvocationTargetException | IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
-    private static final class NotFoundController {
-        public void handle(HttpServletRequest request, HttpServletResponse response) throws IOException {
-            response.getWriter().write(String.format("endpoint '%s' not found", request.getRequestURI()));
+    private Object[] parseMethodArguments(MappingMethod mappingMethod, HttpServletRequest request, HttpServletResponse response) {
+        Parameter[] methodParameters = mappingMethod.getTargetMethod().getParameters();
+        Object[] parameters = mappingMethod.getParameters();
+
+        for (int a = 0; a < parameters.length; a++) {
+            if (methodParameters[a].getType().equals(HttpServletRequest.class)) {
+                parameters[a] = request;
+            } else if (methodParameters[a].getType().equals(HttpServletResponse.class)) {
+                parameters[a] = response;
+            }
         }
+
+        return parameters;
     }
 }

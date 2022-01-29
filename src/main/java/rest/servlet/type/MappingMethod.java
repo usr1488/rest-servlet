@@ -11,7 +11,8 @@ import java.lang.reflect.Method;
 @Setter
 @Builder
 public class MappingMethod {
-    private Method method;
+    private Object targetObject;
+    private Method targetMethod;
     private String url;
     private HttpMethod httpMethod;
     private Object[] parameters;
