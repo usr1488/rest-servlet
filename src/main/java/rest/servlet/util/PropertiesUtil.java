@@ -1,4 +1,4 @@
-package rest.servlet.utils;
+package rest.servlet.util;
 
 import java.io.IOException;
 import java.io.InputStream;

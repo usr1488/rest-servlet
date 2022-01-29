@@ -15,6 +15,7 @@ repositories {
 }
 
 dependencies {
+    implementation fileTree(dir:  'lib/class-scanner.jar')
     implementation 'com.h2database:h2:2.0.202'
     compileOnly 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'
