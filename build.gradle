@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+    id 'war'
+}
+
+group 'affordable.slavery'
+version '1.0'
+
+sourceCompatibility = 1.8
+
+compileJava.dependsOn clean
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.h2database:h2:2.0.202'
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
+}
