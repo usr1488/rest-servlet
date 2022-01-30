@@ -8,7 +8,8 @@ import rest.servlet.util.hibernate.HibernateTransaction;
 
 import java.util.List;
 
-@Data
+import static rest.servlet.util.hibernate.HQLQuery.*;
+
 @Builder
 public class HumanDao implements Dao {
     private final HibernateTransaction transaction;
@@ -17,26 +18,29 @@ public class HumanDao implements Dao {
 
     @Override
     public void save(Object entity) {
-
+        transaction.startTransaction();
+        session.save(entity);
+        transaction.commitTransaction();
+        session.close();
     }
 
     @Override
-    public List findAll() {
-        return null;
+    public List<Human> findAll() {
+        return session.createQuery(SELECT_ALL_HUMAN, Human.class).getResultList();
     }
 
     @Override
-    public Object get(long id) {
-        return null;
+    public Human get(long id) {
+        return session.get(Human.class, id);
     }
 
     @Override
     public void update(Object entity) {
-
+        session.update(entity);
     }
 
     @Override
-    public void delete(long id) {
-
+    public void delete(Object human) {
+        session.delete(human);
     }
 }
