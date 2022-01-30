@@ -1,4 +1,4 @@
-package rest.servlet.servlet;
+package rest.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletConfig;

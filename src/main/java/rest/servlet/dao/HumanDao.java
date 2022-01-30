@@ -1,23 +1,22 @@
 package rest.servlet.dao;
 
 import lombok.Builder;
-import lombok.Data;
 import org.hibernate.Session;
 import rest.servlet.entity.Human;
 import rest.servlet.util.hibernate.HibernateTransaction;
 
 import java.util.List;
 
-import static rest.servlet.util.hibernate.HQLQuery.*;
+import static rest.servlet.util.hibernate.HQLQuery.SELECT_ALL_HUMAN;
 
 @Builder
-public class HumanDao implements Dao {
+public class HumanDao implements Dao<Human> {
     private final HibernateTransaction transaction;
     private final Human human;
     private final Session session;
 
     @Override
-    public void save(Object entity) {
+    public void save(Human entity) {
         transaction.startTransaction();
         session.save(entity);
         transaction.commitTransaction();
@@ -35,12 +34,12 @@ public class HumanDao implements Dao {
     }
 
     @Override
-    public void update(Object entity) {
+    public void update(Human entity) {
         session.update(entity);
     }
 
     @Override
-    public void delete(Object human) {
+    public void delete(Human human) {
         session.delete(human);
     }
 }
