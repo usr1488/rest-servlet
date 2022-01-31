@@ -1,7 +1,7 @@
 package rest.servlet.dbconnect;
 
 import org.apache.commons.dbcp2.BasicDataSource;
-import rest.servlet.util.PropertiesUtil;
+import rest.servlet.core.util.PropertiesUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;

@@ -1,6 +1,4 @@
-package rest.servlet.annotation;
-
-import rest.servlet.util.HttpMethod;
+package rest.servlet.core.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,7 +7,5 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Mapping {
-    String value() default "/";
-    HttpMethod method() default HttpMethod.GET;
+public @interface Bean {
 }

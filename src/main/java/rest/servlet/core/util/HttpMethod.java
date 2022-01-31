@@ -1,4 +1,4 @@
-package rest.servlet.util;
+package rest.servlet.core.util;
 
 public enum HttpMethod {
     GET,

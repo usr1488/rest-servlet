@@ -1,15 +1,24 @@
 package rest.servlet.controller;
 
-import rest.servlet.annotation.Controller;
-import rest.servlet.annotation.Mapping;
-
-import java.util.Arrays;
-import java.util.List;
+import rest.servlet.core.annotation.*;
 
 @Controller
+@Configuration
 public class HomeController {
+    @Property("hibernate.connection.url")
+    private String url;
+
+    @Inject
+    private Runnable runnable;
+
     @Mapping
-    public List<String> home() {
-        return Arrays.asList("1", "2", "3");
+    public String home() {
+        runnable.run();
+        return url;
+    }
+
+    @Bean
+    public Runnable foo() {
+        return () -> System.out.println("bean");
     }
 }

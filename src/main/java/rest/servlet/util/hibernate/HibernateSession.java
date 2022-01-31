@@ -2,7 +2,7 @@ package rest.servlet.util.hibernate;
 
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import rest.servlet.util.PropertiesUtil;
+import rest.servlet.core.util.PropertiesUtil;
 
 public class HibernateSession {
     private final Class<?> clazz;
