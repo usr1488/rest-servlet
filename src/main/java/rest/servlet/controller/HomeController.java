@@ -1,24 +1,27 @@
 package rest.servlet.controller;
 
-import rest.servlet.core.annotation.*;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import rest.servlet.core.annotation.Controller;
+import rest.servlet.core.annotation.Inject;
+import rest.servlet.core.annotation.Mapping;
+import rest.servlet.entity.Human;
 
 @Controller
-@Configuration
 public class HomeController {
-    @Property("hibernate.connection.url")
-    private String url;
-
     @Inject
-    private Runnable runnable;
+    private Session session;
 
-    @Mapping
-    public String home() {
-        runnable.run();
-        return url;
+    public HomeController() throws ClassNotFoundException {
+        Class.forName("org.h2.Driver");
     }
 
-    @Bean
-    public Runnable foo() {
-        return () -> System.out.println("bean");
+    @Mapping
+    public Human home() {
+        Transaction transaction = session.beginTransaction();
+        session.save(Human.builder().name("nigger").build());
+        transaction.commit();
+        session.clear();
+        return session.get(Human.class, 1L);
     }
 }

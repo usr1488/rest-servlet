@@ -9,16 +9,18 @@ import java.util.Arrays;
 
 public class ConfigurationAnnotationProcessor implements AnnotationProcessor {
     @Override
-    public void processComponent(Object component, Container container) {
-        if (!component.getClass().isAnnotationPresent(Configuration.class)) {
+    public void processBean(Object bean, Container container) {
+        if (!bean.getClass().isAnnotationPresent(Configuration.class)) {
             return;
         }
 
-        Arrays.stream(component.getClass().getDeclaredMethods())
+        Arrays.stream(bean.getClass().getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(Bean.class))
                 .forEach(method -> {
+                    method.setAccessible(true);
+
                     try {
-                        container.addBean(method.getReturnType(), method.invoke(component));
+                        container.addBean(method.getReturnType(), method.invoke(bean));
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);
                     }

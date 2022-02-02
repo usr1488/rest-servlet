@@ -5,15 +5,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kilpo.util.ClassScanner;
 import rest.servlet.core.annotation.Component;
-import rest.servlet.core.processor.ConfigurationAnnotationProcessor;
-import rest.servlet.core.processor.ControllerAnnotationProcessor;
-import rest.servlet.core.processor.InjectAnnotationProcessor;
-import rest.servlet.core.processor.PropertyAnnotationProcessor;
+import rest.servlet.core.processor.*;
 import rest.servlet.core.util.MappingMethod;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +23,7 @@ public class Container {
         List<Class<?>> classes = ClassScanner.scan();
 
         if (classes.isEmpty()) {
-            throw new RuntimeException("no classes were found during application startup");
+            throw new RuntimeException("no classes were found during container startup");
         }
 
         beans.put(servletConfig.getClass(), servletConfig);
@@ -46,20 +43,23 @@ public class Container {
                     }
                 });
 
-        Arrays.asList(
+        Collection<Object> beans = this.beans.values();
+        AnnotationProcessor[] processors = new AnnotationProcessor[] {
+                new PropertyAnnotationProcessor(),
                 new ConfigurationAnnotationProcessor(),
-                new ControllerAnnotationProcessor(),
                 new InjectAnnotationProcessor(),
-                new PropertyAnnotationProcessor()
-        ).forEach(annotationProcessor ->
-                beans.values().forEach(component -> {
-                    try {
-                        annotationProcessor.processComponent(component, this);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                })
-        );
+                new ControllerAnnotationProcessor()
+        };
+
+        for (AnnotationProcessor processor : processors) {
+            beans.forEach(bean -> {
+                try {
+                    processor.processBean(bean, this);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 
     private boolean isComponentPresent(Class<?> clazz) {
@@ -72,8 +72,8 @@ public class Container {
         return clazz.isAnnotationPresent(Component.class);
     }
 
-    public Object getBean(Class<?> clazz) {
-        return beans.get(clazz);
+    public Object getBean(Class<?> type) {
+        return beans.get(type);
     }
 
     public void addBean(Class<?> type, Object bean) {

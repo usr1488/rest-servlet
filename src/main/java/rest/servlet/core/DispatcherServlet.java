@@ -15,12 +15,12 @@ import java.lang.reflect.InvocationTargetException;
 @WebServlet("/")
 public class DispatcherServlet extends HttpServlet {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private Container container;
+    private volatile Container container;
 
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
-        super.init(servletConfig);
         container = new Container(servletConfig);
+        super.init(servletConfig);
     }
 
     @Override

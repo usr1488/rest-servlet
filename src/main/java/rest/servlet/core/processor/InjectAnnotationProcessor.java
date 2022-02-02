@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public class InjectAnnotationProcessor implements AnnotationProcessor {
     @Override
-    public void processComponent(Object component, Container container) {
+    public void processBean(Object component, Container container) {
         Arrays.stream(component.getClass().getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(Inject.class))
                 .forEach(field -> {

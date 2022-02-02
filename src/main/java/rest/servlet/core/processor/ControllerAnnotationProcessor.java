@@ -9,13 +9,13 @@ import java.lang.reflect.Method;
 
 public class ControllerAnnotationProcessor implements AnnotationProcessor {
     @Override
-    public void processComponent(Object component, Container container) {
-        for (Method method : component.getClass().getDeclaredMethods()) {
+    public void processBean(Object bean, Container container) {
+        for (Method method : bean.getClass().getDeclaredMethods()) {
             if (!method.isAnnotationPresent(Mapping.class)) {
                 continue;
             }
 
-            String controllerMapping = component.getClass().getAnnotation(Controller.class).value();
+            String controllerMapping = bean.getClass().getAnnotation(Controller.class).value();
             String methodMapping = method.getAnnotation(Mapping.class).value();
 
             if (!controllerMapping.startsWith("/")) {
@@ -29,7 +29,7 @@ public class ControllerAnnotationProcessor implements AnnotationProcessor {
             method.setAccessible(true);
             container.addMappingMethod(
                     MappingMethod.builder()
-                            .targetObject(component)
+                            .targetObject(bean)
                             .targetMethod(method)
                             .url(controllerMapping.equals("/") ? "" + methodMapping : controllerMapping + methodMapping)
                             .httpMethod(method.getAnnotation(Mapping.class).method())
