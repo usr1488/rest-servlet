@@ -1,6 +1,6 @@
 package rest.servlet.core.processor;
 
-import rest.servlet.core.Container;
+import rest.servlet.core.BeanContainer;
 import rest.servlet.core.annotation.Property;
 import rest.servlet.core.util.PropertiesUtil;
 
@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 public class PropertyAnnotationProcessor implements AnnotationProcessor {
     @Override
-    public void processBean(Object bean, Container container) {
+    public void processBean(Object bean, BeanContainer beanContainer) {
         Arrays.stream(bean.getClass().getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(Property.class))
                 .forEach(field -> {

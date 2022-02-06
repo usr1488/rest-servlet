@@ -9,11 +9,9 @@ import java.lang.reflect.Method;
 @Getter
 @Setter
 @Builder
-public class MappingMethod {
+public class ExceptionHandlerMethod {
     private volatile Object targetObject;
     private volatile Method targetMethod;
     private volatile Object[] methodArguments;
-    private volatile String url;
-    private volatile HttpMethod httpMethod;
-    private volatile String acceptContentType;
+    private volatile Class<? extends Throwable> exceptionType;
 }

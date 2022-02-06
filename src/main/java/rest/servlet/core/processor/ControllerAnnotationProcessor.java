@@ -1,6 +1,6 @@
 package rest.servlet.core.processor;
 
-import rest.servlet.core.Container;
+import rest.servlet.core.BeanContainer;
 import rest.servlet.core.annotation.Controller;
 import rest.servlet.core.annotation.Mapping;
 import rest.servlet.core.util.MappingMethod;
@@ -9,7 +9,11 @@ import java.lang.reflect.Method;
 
 public class ControllerAnnotationProcessor implements AnnotationProcessor {
     @Override
-    public void processBean(Object bean, Container container) {
+    public void processBean(Object bean, BeanContainer beanContainer) {
+        if (!bean.getClass().isAnnotationPresent(Controller.class)) {
+            return;
+        }
+
         for (Method method : bean.getClass().getDeclaredMethods()) {
             if (!method.isAnnotationPresent(Mapping.class)) {
                 continue;
@@ -27,12 +31,13 @@ public class ControllerAnnotationProcessor implements AnnotationProcessor {
             }
 
             method.setAccessible(true);
-            container.addMappingMethod(
+            beanContainer.addMappingMethod(
                     MappingMethod.builder()
                             .targetObject(bean)
                             .targetMethod(method)
                             .url(controllerMapping.equals("/") ? "" + methodMapping : controllerMapping + methodMapping)
                             .httpMethod(method.getAnnotation(Mapping.class).method())
+                            .acceptContentType(method.getAnnotation(Mapping.class).acceptContentType().trim())
                             .build()
             );
         }

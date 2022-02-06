@@ -29,8 +29,4 @@ public class PropertiesUtil {
     public static String getProperty(String key) {
         return (String) PROPERTIES.get(key);
     }
-
-    public static Properties getAllProperties() {
-        return PROPERTIES;
-    }
 }
