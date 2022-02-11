@@ -21,6 +21,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'
     compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+    implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl:2.0.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.1'
     implementation 'org.hibernate:hibernate-core:5.6.1.Final'

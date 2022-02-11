@@ -11,15 +11,19 @@ import java.util.Arrays;
 import java.util.List;
 
 public class XmlConverter implements RequestBodyConverter {
+    private final XmlMapper xmlMapper;
+
+    public XmlConverter() {
+        xmlMapper = new XmlMapper();
+        xmlMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        xmlMapper.setVisibility(VisibilityChecker.Std.defaultInstance().withFieldVisibility(JsonAutoDetect.Visibility.ANY));
+    }
+
     @Override
     public <T> T convert(InputStream inputStream, Class<T> clazz) throws IOException {
-        XmlMapper xmlMapper = new XmlMapper();
         StringBuilder stringBuilder = new StringBuilder();
         byte[] buffer = new byte[4096];
         int count;
-
-        xmlMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        xmlMapper.setVisibility(VisibilityChecker.Std.defaultInstance().withFieldVisibility(JsonAutoDetect.Visibility.ANY));
 
         while ((count = inputStream.read(buffer)) != -1) {
             stringBuilder.append(new String(buffer, 0, count));

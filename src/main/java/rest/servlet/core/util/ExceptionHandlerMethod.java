@@ -14,4 +14,5 @@ public class ExceptionHandlerMethod {
     private volatile Method targetMethod;
     private volatile Object[] methodArguments;
     private volatile Class<? extends Throwable> exceptionType;
+    private volatile boolean isPage;
 }

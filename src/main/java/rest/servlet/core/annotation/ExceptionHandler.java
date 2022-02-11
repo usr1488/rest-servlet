@@ -11,4 +11,5 @@ import java.lang.annotation.Target;
 public @interface ExceptionHandler {
     // ignored on class level declaration
     Class<? extends Throwable> value() default Throwable.class;
+    boolean isPage() default false;
 }

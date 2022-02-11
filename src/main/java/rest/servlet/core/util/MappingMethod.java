@@ -16,4 +16,5 @@ public class MappingMethod {
     private volatile String url;
     private volatile HttpMethod httpMethod;
     private volatile String acceptContentType;
+    private volatile boolean isPage;
 }

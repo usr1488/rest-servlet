@@ -31,14 +31,12 @@ public class BeanContainer {
     private final List<ExceptionHandlerMethod> exceptionHandlers = new CopyOnWriteArrayList<>();
     private final List<RequestBodyConverter> requestBodyConverters = new CopyOnWriteArrayList<>();
 
-    BeanContainer(ServletConfig servletConfig) {
+    BeanContainer() {
         List<Class<?>> classes = ClassScanner.scan();
 
         if (classes.isEmpty()) {
             throw new RuntimeException("no classes were found during container startup");
         }
-
-        beans.put(servletConfig.getClass(), servletConfig);
 
         classes.stream()
                 .filter(clazz -> RequestBodyConverter.class.isAssignableFrom(clazz) &&

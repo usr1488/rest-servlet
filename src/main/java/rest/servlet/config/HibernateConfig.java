@@ -1,6 +1,7 @@
 package rest.servlet.config;
 
 import kilpo.util.ClassScanner;
+import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -42,6 +43,10 @@ public class HibernateConfig {
         properties.put(AvailableSettings.SHOW_SQL, showSql);
         properties.put(AvailableSettings.HBM2DDL_AUTO, hbm2ddl);
 
-        return configuration.buildSessionFactory(new StandardServiceRegistryBuilder().applySettings(properties).build()).openSession();
+        Session session = configuration.buildSessionFactory(new StandardServiceRegistryBuilder().applySettings(properties).build()).openSession();
+
+        session.setHibernateFlushMode(FlushMode.COMMIT);
+
+        return session;
     }
 }

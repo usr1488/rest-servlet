@@ -13,4 +13,5 @@ public @interface Mapping {
     String value() default "/";
     HttpMethod method() default HttpMethod.GET;
     String acceptContentType() default "";
+    boolean isPage() default false;
 }

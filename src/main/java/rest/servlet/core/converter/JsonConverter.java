@@ -11,15 +11,19 @@ import java.util.Arrays;
 import java.util.List;
 
 public class JsonConverter implements RequestBodyConverter {
+    private final ObjectMapper objectMapper;
+
+    public JsonConverter() {
+        objectMapper = new ObjectMapper();
+        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        objectMapper.setVisibility(VisibilityChecker.Std.defaultInstance().withFieldVisibility(JsonAutoDetect.Visibility.ANY));
+    }
+
     @Override
     public <T> T convert(InputStream inputStream, Class<T> clazz) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
         StringBuilder stringBuilder = new StringBuilder();
         byte[] buffer = new byte[4096];
         int count;
-
-        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        objectMapper.setVisibility(VisibilityChecker.Std.defaultInstance().withFieldVisibility(JsonAutoDetect.Visibility.ANY));
 
         while ((count = inputStream.read(buffer)) != -1) {
             stringBuilder.append(new String(buffer, 0, count));
